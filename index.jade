@@ -1,0 +1,61 @@
+doctype 5
+html
+	head
+		script(type="text/javascript", src="./socket.io/socket.io.js")
+		script(type="text/javascript", src="./paper")
+
+	body
+		canvas#myCanvas(height="300px", width="300px", style="border: 1px solid black;")
+
+		script(type="text/javascript")
+			socket = io.connect()
+			.on('message', function(pool) {
+				draw(JSON.parse(pool));
+			})
+			.on('position', function(position) {
+				position = JSON.parse(position);
+				paper.project.activeLayer._children[position.player * 2].position = position.point;
+				paper.view.draw();
+			});
+
+		script(type="text/javascript")
+			window.onload = function() {
+				paper.setup(document.getElementById('myCanvas'));
+				width = (height = 300),
+				radius = 100,
+				center = new paper.Point(height / 2, height / 2),
+				tool = new paper.Tool;
+			}			
+			function draw(pool) {
+				var a = 2 * Math.PI / (pool.size * 2);
+				paper.project.activeLayer._children = [];
+				for(var i=0; i<(pool.size * 2); i++) {
+					var path = new paper.Path;
+					if(i == pool.player * 2) {
+						p1 = new paper.Point(Math.cos(a * pool.player * 2), -Math.sin(a * pool.player * 2)).multiply(radius).add(center);
+						p2 = new paper.Point(Math.cos(a * (pool.player * 2 + 1)), -Math.sin(a * (pool.player * 2 + 1))).multiply(radius).add(center);
+						path.add(p1);
+						path.add(p2);
+					}
+					else {
+						path.add((new paper.Point(Math.cos(a * i), -Math.sin(a * i))).multiply(radius).add(center));
+						path.add((new paper.Point(Math.cos(a * (i+1)), -Math.sin(a * (i+1)))).multiply(radius).add(center));
+					}
+					path.strokeColor = i == pool.player * 2 ? 'green' : (i%2 == 0 ? 'red' : 'black');
+					if(i%2 == 0) {
+						path.scale(0.25);
+					}
+				}
+				
+				paddle = paper.project.activeLayer._children[pool.player * 2];
+				tool.onMouseMove = function(e) {
+					var point = e.point.subtract(p1).project(p2.subtract(p1)).add(p1);
+					paddle.position = point;
+					socket.emit('position', JSON.stringify({
+						player: pool.player,
+						point: point
+					}));
+
+				}
+				paper.view.draw();
+			}
