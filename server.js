@@ -1,7 +1,8 @@
 var http = require('http'),
 fs = require('fs'),
 jade = require('jade'),
-io = require('socket.io');
+io = require('socket.io')
+paper = require('./point');
 
 var server = http.createServer(function(req, res) {
 	switch(req.url.substring(1)) {
@@ -23,16 +24,29 @@ var server = http.createServer(function(req, res) {
 }).listen(1337, '172.30.224.21');
 
 io = io.listen(server);
+positions = {};
+setInterval(function() {
+	if(typeof puck != 'undefined') {
+		puck = puck.add(dir);
+		io.sockets.emit('puck', JSON.stringify(puck));
+	}
+
+	io.sockets.emit('position', JSON.stringify(positions));
+}, 16);
 
 io.sockets.on('connection', function(socket) {
+	positions = {};
 	var clients = io.sockets.clients(),
 	pool = {size: clients.length};
 	for(var i=0; i<clients.length; i++) {
 		pool.player = i;
 		clients[i].send(JSON.stringify(pool));
 	}
+	puck = new paper.Point(150, 150);
+	dir = new paper.Point(Math.cos(dir = Math.random()*2*Math.PI), Math.sin(dir));
 
 	socket.on('disconnect', function() {
+		positions = {};
 		var clients = io.sockets.clients(),
 		index = clients.indexOf(socket),
 		pool = {size: clients.length - 1};
@@ -44,6 +58,6 @@ io.sockets.on('connection', function(socket) {
 		}
 	})
 	.on('position', function(position) {
-		socket.broadcast.emit('position', position);
+		positions[(position = JSON.parse(position)).player] = position.point;
 	});
 });

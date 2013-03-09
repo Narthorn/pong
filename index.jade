@@ -12,9 +12,15 @@ html
 			.on('message', function(pool) {
 				draw(JSON.parse(pool));
 			})
-			.on('position', function(position) {
-				position = JSON.parse(position);
-				paper.project.activeLayer._children[position.player * 2].position = position.point;
+			.on('puck', function(point) {
+				puck.position = JSON.parse(point);
+			})
+			.on('position', function(positions) {
+				positions = JSON.parse(positions);
+				var children = paper.project.activeLayer._children;
+				for(var player in positions) {
+					children[player * 2].position = positions[player];
+				}
 				paper.view.draw();
 			});
 
@@ -25,7 +31,8 @@ html
 				radius = 100,
 				center = new paper.Point(height / 2, height / 2),
 				tool = new paper.Tool;
-			}			
+				tool.minDistance = 2;
+			}
 			function draw(pool) {
 				var a = 2 * Math.PI / (pool.size * 2);
 				paper.project.activeLayer._children = [];
@@ -46,11 +53,10 @@ html
 						path.scale(0.25);
 					}
 				}
-				
+				(puck = new paper.Path.Circle(center, 5)).fillColor = 'black';
 				paddle = paper.project.activeLayer._children[pool.player * 2];
 				tool.onMouseMove = function(e) {
 					var point = e.point.subtract(p1).project(p2.subtract(p1)).add(p1);
-					paddle.position = point;
 					socket.emit('position', JSON.stringify({
 						player: pool.player,
 						point: point
