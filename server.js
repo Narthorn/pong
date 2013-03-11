@@ -21,7 +21,7 @@ var server = http.createServer(function(req, res) {
 				res.end((jade.compile(data, {pretty: true}))({}));
 			});
 	}
-}).listen(1337, 'localhost');
+}).listen(1337, '172.30.224.21');
 
 io = io.listen(server, {'log level': 2});
 positions = {},
@@ -43,7 +43,14 @@ setInterval(function() {
 			n = new paper.Point(-d.y, d.x),
 			i = p2.subtract(puck),
 			dist = Math.abs(i.dot(n));
-			if(dist < 3) {
+			if(dist < 5) {
+				if(index%2 == 0) {
+					var l = p2.subtract(p1).getLength() / 8,
+					paddle = positions[index / 2];
+					if(Math.abs(puck.subtract(paddle).dot(d)) > l) {
+						return false;
+					}
+				}
 				dir = d.multiply(2 * d.dot(dir)).subtract(dir);
 				lastBounced = 3;
 			}

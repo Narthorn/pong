@@ -55,9 +55,10 @@ html
 				}
 				(puck = new paper.Path.Circle(center, 5)).fillColor = 'black';
 				paddle = paper.project.activeLayer._children[pool.player * 2];
+				console.log(paddle.position);
 				socket.emit('position', JSON.stringify({
 					player: pool.player,
-					point: paddle.position
+					point: new paper.Point(paddle.position.x, paddle.position.y)
 				}));
 				tool.onMouseMove = function(e) {
 					var point = e.point.subtract(p1).project(p2.subtract(p1)).add(p1);
@@ -65,7 +66,6 @@ html
 						player: pool.player,
 						point: point
 					}));
-
 				}
 				paper.view.draw();
 			}

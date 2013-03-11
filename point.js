@@ -19,14 +19,13 @@ Point: function(x, y) {
 		return new paper.Point(this.x / value, this.y / value);
 	}
 
-	var self = this;
-	function getLength() {
-		var l = self.x * self.x + self.y * self.y;
+	this.getLength = function() {
+		var l = this.x * this.x + this.y * this.y;
 		return Math.sqrt(l);
 	}
 
 	this.normalize = function() {
-		var l = getLength();
+		var l = this.getLength();
 		return (new paper.Point(this.x, this.y)).divide(l);
 	};
 
