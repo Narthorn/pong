@@ -16,11 +16,12 @@ Point: function(x, y) {
 	};
 
 	this.divide = function(value) {
-		return new paper.Point(this.x / point.x, this.y / point.y);
+		return new paper.Point(this.x / value, this.y / value);
 	}
 
+	var self = this;
 	function getLength() {
-		var l = this.x * this.x + this.y * this.y;
+		var l = self.x * self.x + self.y * self.y;
 		return Math.sqrt(l);
 	}
 
@@ -31,6 +32,14 @@ Point: function(x, y) {
 
 	this.dot = function(point) {
 		return this.x * point.x + this.y * point.y;
+	};
+
+	this.getAngle = function(point) {
+		return Math.atan2(this.y - point.y, this.x - point.x);
+	};
+
+	this.clone = function() {
+		return new paper.Point(this.x, this.y);
 	};
 }
 };
