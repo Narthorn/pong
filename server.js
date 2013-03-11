@@ -23,12 +23,38 @@ var server = http.createServer(function(req, res) {
 	}
 }).listen(1337, '172.30.224.21');
 
-io = io.listen(server);
-positions = {};
+io = io.listen(server, {'log level': 2});
+positions = {},
+lastBounced = 3;
+width = (height = 300),
+radius = 100,
+center = new paper.Point(height / 2, height / 2);
 setInterval(function() {
 	if(typeof puck != 'undefined') {
 		puck = puck.add(dir);
 		io.sockets.emit('puck', JSON.stringify(puck));
+
+		if(--lastBounced <= 0) {
+			var p = 2 * io.sockets.clients().length,
+			index = (Math.floor(puck.getAngle(center) / a) + p)%p,
+			p1 = (new paper.Point(Math.cos(a * index), Math.sin(a * index))).multiply(100).add(center),
+			p2 = (new paper.Point(Math.cos(a * (index+1)), Math.sin(a * (index+1)))).multiply(100).add(center),
+			d = p2.subtract(p1).normalize(),
+			n = new paper.Point(-d.y, d.x),
+			i = p2.subtract(puck),
+			dist = Math.abs(i.dot(n));
+			if(dist < 5) {
+				if(index%2 == 0) {
+					var l = p2.subtract(p1).getLength() / 8,
+					paddle = positions[index / 2];
+					if(Math.abs(puck.subtract(paddle).dot(d)) > l) {
+						return false;
+					}
+				}
+				dir = d.multiply(2 * d.dot(dir)).subtract(dir);
+				lastBounced = 3;
+			}
+		}
 	}
 
 	io.sockets.emit('position', JSON.stringify(positions));
@@ -42,7 +68,8 @@ io.sockets.on('connection', function(socket) {
 		pool.player = i;
 		clients[i].send(JSON.stringify(pool));
 	}
-	puck = new paper.Point(150, 150);
+	a = Math.PI / pool.size;
+	puck = center.clone();
 	dir = new paper.Point(Math.cos(dir = Math.random()*2*Math.PI), Math.sin(dir));
 
 	socket.on('disconnect', function() {
@@ -56,6 +83,8 @@ io.sockets.on('connection', function(socket) {
 				clients[i].send(JSON.stringify(pool));
 			}
 		}
+		puck = center.clone();
+		dir = new paper.Point(Math.cos(dir = Math.random()*2*Math.PI), Math.sin(dir));
 	})
 	.on('position', function(position) {
 		positions[(position = JSON.parse(position)).player] = position.point;

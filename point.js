@@ -16,21 +16,29 @@ Point: function(x, y) {
 	};
 
 	this.divide = function(value) {
-		return new paper.Point(this.x / point.x, this.y / point.y);
+		return new paper.Point(this.x / value, this.y / value);
 	}
 
-	function getLength() {
+	this.getLength = function() {
 		var l = this.x * this.x + this.y * this.y;
 		return Math.sqrt(l);
 	}
 
 	this.normalize = function() {
-		var l = getLength();
+		var l = this.getLength();
 		return (new paper.Point(this.x, this.y)).divide(l);
 	};
 
 	this.dot = function(point) {
 		return this.x * point.x + this.y * point.y;
+	};
+
+	this.getAngle = function(point) {
+		return Math.atan2(this.y - point.y, this.x - point.x);
+	};
+
+	this.clone = function() {
+		return new paper.Point(this.x, this.y);
 	};
 }
 };

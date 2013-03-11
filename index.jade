@@ -39,14 +39,14 @@ html
 				for(var i=0; i<(pool.size * 2); i++) {
 					var path = new paper.Path;
 					if(i == pool.player * 2) {
-						p1 = new paper.Point(Math.cos(a * pool.player * 2), -Math.sin(a * pool.player * 2)).multiply(radius).add(center);
-						p2 = new paper.Point(Math.cos(a * (pool.player * 2 + 1)), -Math.sin(a * (pool.player * 2 + 1))).multiply(radius).add(center);
+						p1 = new paper.Point(Math.cos(a * pool.player * 2), Math.sin(a * pool.player * 2)).multiply(radius).add(center);
+						p2 = new paper.Point(Math.cos(a * (pool.player * 2 + 1)), Math.sin(a * (pool.player * 2 + 1))).multiply(radius).add(center);
 						path.add(p1);
 						path.add(p2);
 					}
 					else {
-						path.add((new paper.Point(Math.cos(a * i), -Math.sin(a * i))).multiply(radius).add(center));
-						path.add((new paper.Point(Math.cos(a * (i+1)), -Math.sin(a * (i+1)))).multiply(radius).add(center));
+						path.add((new paper.Point(Math.cos(a * i), Math.sin(a * i))).multiply(radius).add(center));
+						path.add((new paper.Point(Math.cos(a * (i+1)), Math.sin(a * (i+1)))).multiply(radius).add(center));
 					}
 					path.strokeColor = i == pool.player * 2 ? 'green' : (i%2 == 0 ? 'red' : 'black');
 					if(i%2 == 0) {
@@ -55,13 +55,17 @@ html
 				}
 				(puck = new paper.Path.Circle(center, 5)).fillColor = 'black';
 				paddle = paper.project.activeLayer._children[pool.player * 2];
+				console.log(paddle.position);
+				socket.emit('position', JSON.stringify({
+					player: pool.player,
+					point: new paper.Point(paddle.position.x, paddle.position.y)
+				}));
 				tool.onMouseMove = function(e) {
 					var point = e.point.subtract(p1).project(p2.subtract(p1)).add(p1);
 					socket.emit('position', JSON.stringify({
 						player: pool.player,
 						point: point
 					}));
-
 				}
 				paper.view.draw();
 			}
